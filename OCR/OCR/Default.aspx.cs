@@ -171,36 +171,60 @@ namespace OCRExtractTable
         }
 
 
-        #region--Generate Excel--
-        protected void GenerateReport(DataTable dt)
+        #region--Generate Excel-- 
+        private void GenerateReport(DataTable table)
         {
-            Response.ClearContent();
-            Response.Buffer = true;
-            Response.AddHeader("content-disposition", string.Format("attachment; filename={0}", "ToDaysOfferAddedReport" + DateTime.Now.ToString("dd_MM_yyyy_hh_mm_ss") + ".xls"));
-            Response.ContentType = "application/ms-excel";
+            HttpContext.Current.Response.Clear();
+            HttpContext.Current.Response.ClearContent();
+            HttpContext.Current.Response.ClearHeaders();
+            HttpContext.Current.Response.Buffer = true;
+            HttpContext.Current.Response.ContentType = "application/ms-excel";
+            HttpContext.Current.Response.Write(@"<!DOCTYPE HTML PUBLIC ""-//W3C//DTD HTML 4.0 Transitional//EN"">");
+            HttpContext.Current.Response.AddHeader("Content-Disposition", "attachment;filename=Reports.xls");
 
-            string tab = string.Empty;
+            HttpContext.Current.Response.Charset = "utf-8";
+            HttpContext.Current.Response.ContentEncoding = System.Text.Encoding.GetEncoding("windows-1250");
+            //sets font
+            HttpContext.Current.Response.Write("<font style='font-size:10.0pt; font-family:Calibri;'>");
+            HttpContext.Current.Response.Write("<BR><BR><BR>");
+            //sets the table border, cell spacing, border color, font of the text, background, foreground, font height
+            HttpContext.Current.Response.Write("<Table border='1' bgColor='#ffffff' " +
+              "borderColor='#000000' cellSpacing='0' cellPadding='0' " +
+              "style='font-size:10.0pt; font-family:Calibri; background:white;'> <TR>");
+            //am getting my grid's column headers
+            //    foreach (DataColumn dc in dt.Columns)
+            //    {
+            //        Response.Write(tab + dc.ColumnName);
+            //        tab = "\t";
+            //    }
+            int columnscount =table.Columns.Count;
 
-            foreach (DataColumn dc in dt.Columns)
-            {
-                Response.Write(tab + dc.ColumnName);
-                tab = "\t";
+            for (int j = 0; j < columnscount; j++)
+            {      //write in new column
+                HttpContext.Current.Response.Write("<Td>");
+                //Get column headers  and make it as bold in excel columns
+                HttpContext.Current.Response.Write("<B>");
+                HttpContext.Current.Response.Write(table.Columns[j].ToString());
+                HttpContext.Current.Response.Write("</B>");
+                HttpContext.Current.Response.Write("</Td>");
             }
-            Response.Write("\n");
-            int i;
-            foreach (DataRow dr in dt.Rows)
-            {
-                tab = "";
-                for (i = 0; i < dt.Columns.Count; i++)
+            HttpContext.Current.Response.Write("</TR>");
+            foreach (DataRow row in table.Rows)
+            {//write in new row
+                HttpContext.Current.Response.Write("<TR>");
+                for (int i = 0; i < table.Columns.Count; i++)
                 {
-                    Response.Write(tab + dr[i].ToString());
-                    tab = "\t";
+                    HttpContext.Current.Response.Write("<Td>");
+                    HttpContext.Current.Response.Write(row[i].ToString());
+                    HttpContext.Current.Response.Write("</Td>");
                 }
-                Response.Write("\n");
+
+                HttpContext.Current.Response.Write("</TR>");
             }
-
-
-            Response.End();
+            HttpContext.Current.Response.Write("</Table>");
+            HttpContext.Current.Response.Write("</font>");
+            HttpContext.Current.Response.Flush();
+            HttpContext.Current.Response.End();
         }
         #endregion
 

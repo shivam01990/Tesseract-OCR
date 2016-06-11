@@ -22,6 +22,7 @@ namespace OCRExtractTable
                     string fname = context.Server.MapPath("~/uploads/" + file.FileName);
                     file.SaveAs(fname);
                 }
+                GC.Collect();
                 context.Response.ContentType = "application/json";
                 context.Response.Write("{}");
             }
