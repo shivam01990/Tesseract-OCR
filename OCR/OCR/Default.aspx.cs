@@ -55,8 +55,8 @@ namespace OCRExtractTable
                     //throw;
                 }
             }
-            string extractText = this.ExtractTextFromImage(cropFilePath);
-            lblText.Text = extractText.Replace(Environment.NewLine, "<br />");
+             this.ExtractTextFromImage(cropFilePath);
+           
         }
 
         private string ExtractTextFromImage(string filePath)
