@@ -143,7 +143,6 @@
                     </div>
                 </div>
             </div>
-            <asp:Label ID="lblText" runat="server" Text="Label"></asp:Label>
         </div>
         <!-- /.container -->
         <asp:HiddenField ID="hdnUploadedImage" runat="server" />
