@@ -8,6 +8,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Web;
 using System.Web.UI;
 using System.Web.UI.WebControls;
@@ -16,7 +17,7 @@ namespace OCRExtractTable
 {
     public partial class Default : System.Web.UI.Page
     {
-        #region--Page Load-- 
+        #region--Page Load--
         protected void Page_Load(object sender, EventArgs e)
         {
             if (!IsPostBack)
@@ -102,10 +103,11 @@ namespace OCRExtractTable
                         string[] configs = { "config.cfg" };
                         using (var api = OcrApi.Create())
                         {
-                            api.Init(Languages.English, datapath,OcrEngineMode.OEM_DEFAULT,configs);
+                            api.Init(Languages.English, datapath, OcrEngineMode.OEM_DEFAULT, configs);
                             using (var bmp = Bitmap.FromFile(temp_crop_file) as Bitmap)
                             {
-                                lstdata.Add(api.GetTextFromImage(bmp));
+                                string extracedText = api.GetTextFromImage(bmp);
+                                lstdata.Add(extracedText); 
                             }
                         }
                     }
@@ -158,7 +160,7 @@ namespace OCRExtractTable
                                                 img.Width / col,
                                                 img.Height / row);
 
-                    g.DrawRectangle(pen, r);                    
+                    g.DrawRectangle(pen, r);
                     list.Add(cropImage(temp, r));
                 }
             }
@@ -171,7 +173,7 @@ namespace OCRExtractTable
             Bitmap bmpCrop = bmpImage.Clone(cropArea, System.Drawing.Imaging.PixelFormat.DontCare);
             img.Dispose();
             System.Drawing.Image orgImage = (System.Drawing.Image)(bmpCrop);
-            System.Drawing.Image newImage= resizeImage(orgImage, 400, 400);
+            System.Drawing.Image newImage = resizeImage(orgImage, 400, 400);
 
             return newImage;
 
