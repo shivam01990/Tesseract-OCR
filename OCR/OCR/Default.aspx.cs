@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.IO;
 using System.Linq;
 using System.Web;
@@ -15,13 +16,16 @@ namespace OCRExtractTable
 {
     public partial class Default : System.Web.UI.Page
     {
+        #region--Page Load-- 
         protected void Page_Load(object sender, EventArgs e)
         {
             if (!IsPostBack)
             {
             }
         }
+        #endregion
 
+        #region--btnOCRReader_Click--
         protected void btnOCRReader_Click(object sender, EventArgs e)
         {
             string filePath = Server.MapPath("~/uploads/" + Path.GetFileName(hdnUploadedImage.Value));
@@ -55,13 +59,13 @@ namespace OCRExtractTable
                     //throw;
                 }
             }
-             this.ExtractTextFromImage(cropFilePath);
-           
+            this.ExtractTextFromImage(cropFilePath);
+
         }
+        #endregion
 
         private string ExtractTextFromImage(string filePath)
         {
-            string plainText = "";
             string datapath = Server.MapPath("~");
             List<System.Drawing.Image> cropimages = new List<System.Drawing.Image>();
             System.Drawing.Image img = System.Drawing.Image.FromFile(filePath, true);
@@ -73,7 +77,7 @@ namespace OCRExtractTable
             cropimages = MultiCrop(filePath, img, totalRows, totalColumns);
 
             string directorypath = Server.MapPath("~/uploads/") + Path.GetFileNameWithoutExtension(filePath);
-            if (!Directory.Exists(directorypath)) ;
+            if (!Directory.Exists(directorypath))
             {
                 Directory.CreateDirectory(directorypath);
             }
@@ -88,16 +92,17 @@ namespace OCRExtractTable
             for (int i = 0; i < cropimages.Count; i++)
             {
                 {
-                    string temp_crop_file = directorypath + "\\" + i + ".bmp";
+                    string temp_crop_file = directorypath + "\\" + i + Path.GetExtension(filePath);
                     {
                         cropimages[i].Save(temp_crop_file);
 
                     }
                     try
                     {
+                        string[] configs = { "config.cfg" };
                         using (var api = OcrApi.Create())
                         {
-                            api.Init(Languages.English, datapath);
+                            api.Init(Languages.English, datapath,OcrEngineMode.OEM_DEFAULT,configs);
                             using (var bmp = Bitmap.FromFile(temp_crop_file) as Bitmap)
                             {
                                 lstdata.Add(api.GetTextFromImage(bmp));
@@ -153,8 +158,7 @@ namespace OCRExtractTable
                                                 img.Width / col,
                                                 img.Height / row);
 
-                    g.DrawRectangle(pen, r);
-
+                    g.DrawRectangle(pen, r);                    
                     list.Add(cropImage(temp, r));
                 }
             }
@@ -166,12 +170,32 @@ namespace OCRExtractTable
             Bitmap bmpImage = new Bitmap(img);
             Bitmap bmpCrop = bmpImage.Clone(cropArea, System.Drawing.Imaging.PixelFormat.DontCare);
             img.Dispose();
-            return (System.Drawing.Image)(bmpCrop);
+            System.Drawing.Image orgImage = (System.Drawing.Image)(bmpCrop);
+            System.Drawing.Image newImage= resizeImage(orgImage, 400, 400);
+
+            return newImage;
 
         }
 
+        #region--Resize Image--
+        public System.Drawing.Image resizeImage(System.Drawing.Image image, int maxWidth, int maxHeight)
+        {
+            var ratioX = (double)maxWidth / image.Width;
+            var ratioY = (double)maxHeight / image.Height;
+            var ratio = Math.Min(ratioX, ratioY);
 
-        #region--Generate Excel-- 
+            var newWidth = (int)(image.Width * ratio);
+            var newHeight = (int)(image.Height * ratio);
+
+            var newImage = new Bitmap(newWidth, newHeight);
+            Graphics.FromImage(newImage).DrawImage(image, 0, 0, newWidth, newHeight);
+            Bitmap bmp = new Bitmap(newImage);
+
+            return (System.Drawing.Image)bmp;
+        }
+        #endregion
+
+        #region--Generate Excel--
         private void GenerateReport(DataTable table)
         {
             HttpContext.Current.Response.Clear();
@@ -197,7 +221,7 @@ namespace OCRExtractTable
             //        Response.Write(tab + dc.ColumnName);
             //        tab = "\t";
             //    }
-            int columnscount =table.Columns.Count;
+            int columnscount = table.Columns.Count;
 
             for (int j = 0; j < columnscount; j++)
             {      //write in new column
